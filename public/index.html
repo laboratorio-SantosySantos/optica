@@ -41,42 +41,7 @@ button.ghost{background:#e8f6fd;color:#0b4f91}
 .box{border:1.5px solid var(--azul);padding:7px;text-align:center;font-weight:800}
 .historial{grid-column:1/-1}
 .scroll{max-height:300px;overflow:auto}
-
-.rxInput{
-  display:grid;
-  grid-template-columns:58px 1fr;
-  gap:6px;
-  min-width:120px;
-}
-
-.rxInput select{
-  padding:10px 6px;
-  font-size:18px;
-  font-weight:900;
-  text-align:center;
-  color:#0b4f91;
-}
-
-.rxInput input{
-  text-align:center;
-}
-
-@media(max-width:900px){
-  main{grid-template-columns:1fr}
-  .rxTop{grid-template-columns:1fr}
-  .grid{grid-template-columns:1fr}
-  table{font-size:13px}
-  th,td{padding:5px}
-  .rxInput{
-    grid-template-columns:48px 1fr;
-    min-width:105px;
-  }
-  .rxInput select,
-  .rxInput input{
-    font-size:16px;
-    padding:9px 5px;
-  }
-}
+@media(max-width:900px){main{grid-template-columns:1fr}.rxTop{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 
@@ -163,47 +128,17 @@ button.ghost{background:#e8f6fd;color:#0b4f91}
     <tbody>
       <tr>
         <th>OD</th>
-        <td>
-          <div class="rxInput">
-            <select id="odEsfSign"><option value="-">-</option><option value="+">+</option></select>
-            <input id="odEsfVal" type="number" step="0.25" min="0" max="30">
-          </div>
-        </td>
-        <td>
-          <div class="rxInput">
-            <select id="odCilSign"><option value="-">-</option><option value="+">+</option></select>
-            <input id="odCilVal" type="number" step="0.25" min="0" max="30">
-          </div>
-        </td>
+        <td><input id="odEsf" type="number" step="0.25" min="-30" max="30"></td>
+        <td><input id="odCil" type="number" step="0.25" min="-30" max="30"></td>
         <td><input id="odEje" type="number" step="1" min="0" max="180"></td>
-        <td>
-          <div class="rxInput">
-            <select id="odAddSign"><option value="+">+</option><option value="-">-</option></select>
-            <input id="odAddVal" type="number" step="0.25" min="0" max="10">
-          </div>
-        </td>
+        <td><input id="odAdd" type="number" step="0.25" min="-10" max="10"></td>
       </tr>
       <tr>
         <th>OI</th>
-        <td>
-          <div class="rxInput">
-            <select id="oiEsfSign"><option value="-">-</option><option value="+">+</option></select>
-            <input id="oiEsfVal" type="number" step="0.25" min="0" max="30">
-          </div>
-        </td>
-        <td>
-          <div class="rxInput">
-            <select id="oiCilSign"><option value="-">-</option><option value="+">+</option></select>
-            <input id="oiCilVal" type="number" step="0.25" min="0" max="30">
-          </div>
-        </td>
+        <td><input id="oiEsf" type="number" step="0.25" min="-30" max="30"></td>
+        <td><input id="oiCil" type="number" step="0.25" min="-30" max="30"></td>
         <td><input id="oiEje" type="number" step="1" min="0" max="180"></td>
-        <td>
-          <div class="rxInput">
-            <select id="oiAddSign"><option value="+">+</option><option value="-">-</option></select>
-            <input id="oiAddVal" type="number" step="0.25" min="0" max="10">
-          </div>
-        </td>
+        <td><input id="oiAdd" type="number" step="0.25" min="-10" max="10"></td>
       </tr>
     </tbody>
   </table>
@@ -301,13 +236,6 @@ const campos = [
   "dp","alt"
 ];
 
-const inputsBase = [
-  "fecha","folio","cliente","armazon","material","tipoVision",
-  "odEje","oiEje","dp","alt",
-  "odEsfSign","odEsfVal","odCilSign","odCilVal","odAddSign","odAddVal",
-  "oiEsfSign","oiEsfVal","oiCilSign","oiCilVal","oiAddSign","oiAddVal"
-];
-
 const titulos = [
   "Fecha","Folio","Cliente","Armazón","Material","Tipo visión",
   "OD ESF","OD CIL","OD EJE","OD ADD",
@@ -320,34 +248,256 @@ let recetas = JSON.parse(localStorage.getItem("recetasSantos") || "[]");
 document.getElementById("fecha").valueAsDate = new Date();
 document.getElementById("folio").value = "SS-" + String(Date.now()).slice(-6);
 
-inputsBase.forEach(c => {
-  const el = document.getElementById(c);
-  if (el) el.addEventListener("input", actualizarPreview);
-  if (el) el.addEventListener("change", actualizarPreview);
+campos.forEach(c => {
+  document.getElementById(c).addEventListener("input", actualizarPreview);
 });
 
 actualizarPreview();
 pintarTabla();
 
-function valorConSigno(signId, valId) {
-  const valor = document.getElementById(valId).value.trim();
-
-  if (valor === "") return "";
-
-  const num = Math.abs(parseFloat(valor));
-
-  if (isNaN(num)) return "";
-
-  if (num === 0) return "0.00";
-
-  const signo = document.getElementById(signId).value;
-  return signo + num.toFixed(2);
+function datos() {
+  let r = {};
+  campos.forEach(c => r[c] = document.getElementById(c).value.trim());
+  return r;
 }
 
-function datos() {
-  return {
-    fecha: document.getElementById("fecha").value.trim(),
-    folio: document.getElementById("folio").value.trim(),
-    cliente: document.getElementById("cliente").value.trim(),
-    armazon: document.getElementById("armazon").value.trim(),
-    material: document.getElementById
+function actualizarPreview() {
+  const r = datos();
+
+  document.getElementById("pFecha").textContent = r.fecha || "";
+  document.getElementById("pFolio").textContent = r.folio || "";
+  document.getElementById("pCliente").textContent = r.cliente || "";
+  document.getElementById("pArmazon").textContent = r.armazon || "";
+  document.getElementById("pMaterial").textContent = r.material || "";
+  document.getElementById("pDp").textContent = r.dp || "";
+  document.getElementById("pAlt").textContent = r.alt || "";
+
+  document.getElementById("pOdEsf").textContent = r.odEsf || "";
+  document.getElementById("pOdCil").textContent = r.odCil || "";
+  document.getElementById("pOdEje").textContent = r.odEje || "";
+  document.getElementById("pOdAdd").textContent = r.odAdd || "";
+
+  document.getElementById("pOiEsf").textContent = r.oiEsf || "";
+  document.getElementById("pOiCil").textContent = r.oiCil || "";
+  document.getElementById("pOiEje").textContent = r.oiEje || "";
+  document.getElementById("pOiAdd").textContent = r.oiAdd || "";
+
+  ["VS","FT","Blended","Progresivo"].forEach(v => {
+    document.getElementById("v" + v).style.background = "white";
+  });
+
+  const map = {
+    "V/S": "VS",
+    "F/T": "FT",
+    "Blended": "Blended",
+    "Progresivo": "Progresivo"
+  };
+
+  if (r.tipoVision && map[r.tipoVision]) {
+    document.getElementById("v" + map[r.tipoVision]).style.background = "#dff5ff";
+  }
+}
+
+function guardar() {
+  const r = datos();
+
+  if (!r.cliente && !r.folio) {
+    msg.textContent = "Agrega por lo menos cliente o folio.";
+    return;
+  }
+
+  recetas.push(r);
+  localStorage.setItem("recetasSantos", JSON.stringify(recetas));
+  pintarTabla();
+  msg.textContent = "Receta guardada.";
+}
+
+function limpiar() {
+  campos.forEach(c => document.getElementById(c).value = "");
+  document.getElementById("fecha").valueAsDate = new Date();
+  document.getElementById("folio").value = "SS-" + String(Date.now()).slice(-6);
+  actualizarPreview();
+}
+
+function pintarTabla() {
+  tabla.querySelector("thead").innerHTML =
+    "<tr>" + titulos.map(t => `<th>${t}</th>`).join("") + "</tr>";
+
+  tabla.querySelector("tbody").innerHTML =
+    recetas.map(r =>
+      "<tr>" + campos.map(c => `<td>${r[c] || ""}</td>`).join("") + "</tr>"
+    ).join("");
+}
+
+function libro() {
+  const data = recetas.length ? recetas : [datos()];
+
+  const rows = data.map(r => {
+    let o = {};
+    campos.forEach((c, i) => o[titulos[i]] = r[c] || "");
+    return o;
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Recetas");
+  return wb;
+}
+
+function descargarXlsx() {
+  XLSX.writeFile(libro(), "recetas_santos_y_santos.xlsx");
+}
+
+function imgToDataURL(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      c.getContext("2d").drawImage(img, 0, 0);
+      resolve(c.toDataURL("image/jpeg", 0.92));
+    };
+
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function pdfBlob() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
+  const r = datos();
+
+  const logo = await imgToDataURL("logo.jpg");
+  if (logo) doc.addImage(logo, "JPEG", 38, 22, 150, 100);
+
+  doc.setFontSize(17);
+  doc.setTextColor(11, 79, 145);
+  doc.text("Receta oftálmica", 210, 45);
+
+  doc.setFontSize(11);
+  doc.setTextColor(20, 20, 20);
+  doc.text(`Fecha: ${r.fecha || ""}`, 210, 72);
+  doc.text(`Folio: ${r.folio || ""}`, 560, 72);
+  doc.text(`Cliente: ${r.cliente || ""}`, 210, 96);
+  doc.text(`Armazón: ${r.armazon || ""}`, 210, 120);
+  doc.text(`Material: ${r.material || ""}`, 210, 144);
+  doc.text(`Tipo de visión: ${r.tipoVision || ""}`, 560, 96);
+  doc.text(`DP: ${r.dp || ""}`, 560, 120);
+  doc.text(`ALT: ${r.alt || ""}`, 560, 144);
+
+  doc.autoTable({
+    startY: 185,
+    head: [["", "ESF.", "CIL.", "EJE", "ADD."]],
+    body: [
+      ["OD", r.odEsf || "", r.odCil || "", r.odEje || "", r.odAdd || ""],
+      ["OI", r.oiEsf || "", r.oiCil || "", r.oiEje || "", r.oiAdd || ""]
+    ],
+    styles: {
+      halign: "center",
+      valign: "middle",
+      fontSize: 14,
+      lineColor: [16, 174, 234],
+      lineWidth: 0.8,
+      cellPadding: 12
+    },
+    headStyles: {
+      fillColor: [233, 248, 255],
+      textColor: [0, 31, 84],
+      lineColor: [16, 174, 234]
+    },
+    columnStyles: {
+      0: { fontStyle: "bold", fontSize: 18, cellWidth: 70 }
+    }
+  });
+
+  const y = doc.lastAutoTable.finalY + 25;
+
+  doc.autoTable({
+    startY: y,
+    head: [["Campo", "Valor", "Campo", "Valor"]],
+    body: [
+      ["Fecha", r.fecha || "", "Folio", r.folio || ""],
+      ["Cliente", r.cliente || "", "Armazón", r.armazon || ""],
+      ["Material", r.material || "", "Tipo de visión", r.tipoVision || ""],
+      ["DP", r.dp || "", "ALT", r.alt || ""]
+    ],
+    styles: {
+      fontSize: 10,
+      lineColor: [16, 174, 234],
+      lineWidth: 0.5,
+      cellPadding: 7
+    },
+    headStyles: {
+      fillColor: [11, 79, 145],
+      textColor: [255, 255, 255]
+    },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+      2: { fontStyle: "bold" }
+    }
+  });
+
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 120);
+  doc.text("Santos y Santos Soluciones Ópticas", 40, 570);
+
+  return doc.output("blob");
+}
+
+async function descargarPdf() {
+  const b = await pdfBlob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = "receta_santos_y_santos.pdf";
+  a.click();
+}
+
+function blobToBase64(blob) {
+  return new Promise((res) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.readAsDataURL(blob);
+  });
+}
+
+async function enviarCorreo() {
+  msg.textContent = "Enviando...";
+
+  try {
+    const pdfBase64 = await blobToBase64(await pdfBlob());
+
+    const xlsxBase64 = XLSX.write(libro(), {
+      bookType: "xlsx",
+      type: "base64"
+    });
+
+    const resp = await fetch("/send-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        receta: datos(),
+        subject: "Nueva receta oftálmica",
+        html: "<p>Se adjunta receta oftálmica de Santos y Santos.</p>",
+        pdfBase64: pdfBase64,
+        xlsxBase64: "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + xlsxBase64,
+        filename: "receta_santos_y_santos.pdf"
+      })
+    });
+
+    const j = await resp.json();
+
+    if (!j.ok) throw new Error(j.error);
+
+    msg.textContent = "Correo enviado a santosysantosredes@gmail.com";
+  } catch (e) {
+    msg.textContent = "No se pudo enviar directo: " + e.message + " Puedes descargar PDF/XLSX y enviarlo manualmente.";
+  }
+}
+</script>
+</body>
+</html>
