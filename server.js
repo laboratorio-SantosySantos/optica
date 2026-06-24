@@ -29,11 +29,13 @@ app.post("/send-email", async (req, res) => {
       subject: subject || "Nueva receta oftálmica",
       html: html || "<p>Se adjunta receta.</p>",
       attachments: pdfBase64
-        ? [{
-            filename: filename || "receta.pdf",
-            content: pdfBase64.split(",").pop(),
-            encoding: "base64"
-          }]
+        ? [
+            {
+              filename: filename || "receta.pdf",
+              content: pdfBase64.split(",").pop(),
+              encoding: "base64"
+            }
+          ]
         : []
     });
 
@@ -46,3 +48,4 @@ app.post("/send-email", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log("Servidor activo en puerto " + PORT);
+});
