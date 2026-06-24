@@ -45,4 +45,4 @@ app.post("/send-email", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("Servidor activo en puerto " + PORT)};
+  console.log("Servidor activo en puerto " + PORT);
