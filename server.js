@@ -1,22 +1,49 @@
-# Santos y Santos - Generador de recetas oftalmicas
+const express = require("express");
+const cors = require("cors");
+const nodemailer = require("nodemailer");
 
-## Como usar
-1. Instala Node.js.
-2. En esta carpeta ejecuta: `npm install`
-3. Para activar envio directo por correo, configura variables de entorno:
-   - `SMTP_USER`: correo Gmail remitente
-   - `SMTP_PASS`: app password de Gmail, no tu contraseña normal
-   - `EMAIL_DESTINO`: santosysantosredes@gmail.com
-4. Ejecuta: `npm start`
-5. Abre: http://localhost:3000
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-Sin SMTP configurado, la pagina sigue guardando recetas y permite descargar XLSX/PDF.
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.static("public"));
 
-## Ejemplo Windows PowerShell
-$env:SMTP_USER="tu_correo@gmail.com"
-$env:SMTP_PASS="tu_app_password"
-$env:EMAIL_DESTINO="santosysantosredes@gmail.com"
-npm start
+app.post("/send-email", async (req, res) => {
+  try {
+    const { subject, html, pdfBase64, filename } = req.body;
 
-## Ejemplo Mac/Linux
-SMTP_USER="tu_correo@gmail.com" SMTP_PASS="tu_app_password" EMAIL_DESTINO="santosysantosredes@gmail.com" npm start
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: process.env.MAIL_TO || "santosysantosredes@gmail.com",
+      subject: subject || "Nueva receta oftálmica",
+      html: html || "<p>Se adjunta receta.</p>",
+      attachments: pdfBase64
+        ? [{
+            filename: filename || "receta.pdf",
+            content: pdfBase64.split(",").pop(),
+            encoding: "base64"
+          }]
+        : []
+    });
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(Servidor activo en puerto ${PORT});
+});
